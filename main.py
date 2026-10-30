@@ -77,9 +77,98 @@ def login():
                 parts = line.strip().split(":")
                 if len(parts) == 3 and parts[0] == login and parts[2] == password:
                     print(f"вход успешен. здравствуйте, {login}")
+                    user_menu(user_found)
                     return
         print("неверное имя пользователя или пароль. попытка", attempt + 1, "из 3")
         print("число попыток превышено. возврат в меню.")
+
+
+def change_password():
+    logins, emails = load_existing()
+    login = input("введите имя пользователя для смены пароля: ").strip()
+    if login not in logins:
+        print("имя пользователя не найдено.")
+        return
+    new_password = ask_password()
+    users = []
+    with open(USERS_FILE, encoding="utf-8") as file:
+        for line in file:
+            parts = line.strip().split(":")
+            if len(parts) == 3:
+                if parts[0] == login:
+                    users.append(f"{parts[0]}:{parts[1]}:{new_password}\n")
+                else:
+                    users.append(line)
+    with open(USERS_FILE, "w", encoding="utf-8") as file:
+        file.writelines(users)
+    print("пароль успешно изменен.")
+
+def view_profile():
+    login = input("введите имя пользователя для просмотра профиля: ").strip()
+    with open(USERS_FILE, encoding="utf-8") as file:
+        for line in file:
+            parts = line.strip().split(":")
+            if len(parts) == 3 and parts[0] == login:
+                print(f"Профиль пользователя: {parts[0]}")
+                print(f"Email: {parts[1]}")
+                return
+    print("имя пользователя не найдено.")
+
+def delete_account():
+    login = input("введите имя пользователя для удаления аккаунта: ").strip()
+    password = input("введите пароль для подтверждения: ").strip()
+    user_found = False
+    password_correct = False
+    with open(USERS_FILE, encoding="utf-8") as file:
+        for line in file:
+            parts = line.strip().split(":")
+            if len(parts) == 3 and parts[0] == login:
+                user_found = True
+                if parts[2] == password:
+                    password_correct = True
+                break
+
+    if not user_found:
+        print("имя пользователя не найдено.")
+        return
+
+    if not password_correct:
+        print("неправильный пароль.")
+        return
+
+    users = []
+    with open(USERS_FILE, encoding="utf-8") as file:
+        for line in file:
+            parts = line.strip().split(":")
+            if len(parts) == 3 and parts[0] != login:
+                users.append(line)
+    with open(USERS_FILE, "w", encoding="utf-8") as file:
+        file.writelines(users)
+    print("аккаунт успешно удален.")
+
+def user_menu(user):
+    while True:
+        print(SEPARATOR)
+        print("1. просмотреть профиль")
+        print("2. сменить пароль")
+        print("3. выйти из аккаунта")
+        print("4. удалить аккаунт")
+        print(SEPARATOR)
+
+        choice = input("выберите действие: ").strip()
+
+        if choice == "3":
+            print("выход")
+            break
+        elif choice == "1":
+            view_profile()
+        elif choice == "2":
+            change_password()
+        elif choice == "4":
+            delete_account()
+        else:
+            print("неверный выбор, попробуйте снова")
+
         
 
 def show_menu():
@@ -89,7 +178,7 @@ def show_menu():
         print(SEPARATOR)
         print("1. регистрация")
         print("2. вход")
-        print("0. выйти")
+        print("0. выйти из программы")
         print(SEPARATOR)
 
         choice = input("выберите действие: ").strip()
